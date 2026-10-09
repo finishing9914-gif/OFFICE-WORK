@@ -12,10 +12,19 @@
   "build": {
     "appId": "com.personal.dailydesk",
     "productName": "Daily Desk",
-    "files": ["main.js", "preload.js", "src/**/*", "renderer/**/*", "package.json"],
-    "win": { "target": "portable" }
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "renderer/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "portable"
+    }
   },
   "devDependencies": {
-    "electron": "^33.0.0"
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
   }
 }
