@@ -13,7 +13,7 @@
 <section id="setup" class="screen hidden">
   <div class="center">
     <h1>Daily Desk</h1>
-    <p class="muted">Create an app password. Your checklist and notes are encrypted with it.</p>
+    <p class="muted">Create an app password. Your checklist and notes are encrypted with it. / একটি পাসওয়ার্ড দিন।</p>
     <input id="setup-pw" type="password" placeholder="New password (min 8 chars)" autocomplete="new-password">
     <input id="setup-pw2" type="password" placeholder="Confirm password" autocomplete="new-password">
     <button id="setup-btn" class="primary">Create</button>
@@ -26,9 +26,9 @@
 <section id="lock" class="screen hidden">
   <div class="center">
     <h1>Daily Desk</h1>
-    <p class="muted">Locked</p>
-    <input id="lock-pw" type="password" placeholder="Password" autocomplete="current-password">
-    <button id="lock-btn" class="primary">Unlock</button>
+    <p class="muted">Locked / লক করা আছে</p>
+    <input id="lock-pw" type="password" placeholder="Password / পাসওয়ার্ড" autocomplete="current-password">
+    <button id="lock-btn" class="primary">Unlock / খুলুন</button>
     <p id="lock-err" class="err"></p>
   </div>
 </section>
@@ -37,8 +37,8 @@
 <section id="app" class="screen hidden">
   <header class="top">
     <nav class="tabs">
-      <button class="tab active" data-tab="today">Today</button>
-      <button class="tab" data-tab="notes">Notes</button>
+      <button class="tab active" data-tab="today">Today / আজ</button>
+      <button class="tab" data-tab="notes">Notes / নোট</button>
     </nav>
     <div class="top-actions">
       <button id="pin-btn" class="icon" title="Always on top">📌</button>
@@ -51,13 +51,13 @@
   <div id="tab-today" class="tabpane">
     <div class="datebar"><span id="today-label"></span><span id="sync-dot" class="dot" title="Cloud"></span></div>
     <form id="add-task" class="addrow">
-      <input id="task-input" type="text" placeholder="Add a task for today…" autocomplete="off">
-      <button class="primary" type="submit">+</button>
+      <input id="task-input" type="text" placeholder="Add a task / আজকের কাজ লিখুন…" autocomplete="off">
+      <button class="primary" type="submit" title="Add / যোগ করুন">+</button>
     </form>
     <ul id="task-list" class="list"></ul>
-    <h3 id="carry-title" class="section hidden">Pending from earlier</h3>
+    <h3 id="carry-title" class="section hidden">Pending from earlier / আগের বাকি কাজ</h3>
     <ul id="carry-list" class="list"></ul>
-    <p id="task-empty" class="muted center-text hidden">No tasks yet. Add one above.</p>
+    <p id="task-empty" class="muted center-text hidden">No tasks yet. Add one above. / কোনো কাজ নেই।</p>
     <p id="task-progress" class="muted small"></p>
   </div>
 
@@ -65,19 +65,19 @@
   <div id="tab-notes" class="tabpane hidden">
     <div id="notes-list-view">
       <div class="addrow">
-        <input id="note-search" type="text" placeholder="Search notes…" autocomplete="off">
+        <input id="note-search" type="text" placeholder="Search notes / নোট খুঁজুন…" autocomplete="off">
         <button id="new-note" class="primary" title="New note">+</button>
       </div>
       <ul id="note-list" class="list"></ul>
-      <p id="note-empty" class="muted center-text hidden">No notes yet.</p>
+      <p id="note-empty" class="muted center-text hidden">No notes yet. / কোনো নোট নেই।</p>
     </div>
     <div id="notes-edit-view" class="hidden">
       <div class="addrow">
         <button id="note-back" class="icon" title="Back">←</button>
         <button id="note-delete" class="icon danger" title="Delete note">🗑</button>
       </div>
-      <input id="note-title" type="text" placeholder="Title">
-      <textarea id="note-body" placeholder="Write here…"></textarea>
+      <input id="note-title" type="text" placeholder="Title / শিরোনাম">
+      <textarea id="note-body" placeholder="Write here / এখানে লিখুন…"></textarea>
       <p id="note-saved" class="muted small"></p>
     </div>
   </div>
@@ -87,20 +87,20 @@
 <div id="settings" class="modal hidden">
   <div class="panel">
     <div class="panel-head">
-      <h2>Settings</h2>
+      <h2>Settings / সেটিংস</h2>
       <button id="settings-close" class="icon">✕</button>
     </div>
 
-    <label class="row"><span>Always on top</span><input id="set-pin" type="checkbox"></label>
-    <label class="row"><span>Auto-lock (minutes)</span><input id="set-lock" type="number" min="1" max="120" class="num"></label>
+    <label class="row"><span>Always on top / সবসময় উপরে</span><input id="set-pin" type="checkbox"></label>
+    <label class="row"><span>Auto-lock (minutes) / স্বয়ংক্রিয় লক</span><input id="set-lock" type="number" min="1" max="120" class="num"></label>
 
-    <h3>Cloud backup (Gmail / Google Drive)</h3>
+    <h3>Cloud backup (Gmail / Google Drive) / ক্লাউড ব্যাকআপ</h3>
     <p class="muted small">Backup is encrypted with your app password. Google only stores a locked file.</p>
     <p id="cloud-state" class="small"></p>
     <div class="btnrow">
-      <button id="cloud-connect" class="primary">Connect Gmail</button>
-      <button id="cloud-sync">Sync now</button>
-      <button id="cloud-disconnect" class="danger">Disconnect</button>
+      <button id="cloud-connect" class="primary">Connect Gmail / জিমেইল যুক্ত করুন</button>
+      <button id="cloud-sync">Sync now / সিঙ্ক</button>
+      <button id="cloud-disconnect" class="danger">Disconnect / বিচ্ছিন্ন</button>
     </div>
     <p id="cloud-err" class="err"></p>
   </div>
