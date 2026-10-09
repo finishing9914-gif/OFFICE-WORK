@@ -1,0 +1,28 @@
+name: Build Daily Desk (Windows)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, arena/2f06c3d9-office-work]
+    paths: ['daily-desk/**', '.github/workflows/build-windows.yml']
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: daily-desk
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npm test
+      - run: npm run dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DailyDesk-windows-portable
+          path: daily-desk/dist/*.exe

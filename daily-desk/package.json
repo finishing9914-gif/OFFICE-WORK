@@ -1,0 +1,31 @@
+{
+  "name": "daily-desk",
+  "version": "1.0.0",
+  "description": "Personal daily checklist + notebook. Always-on-top, password protected, encrypted cloud backup (Google Drive).",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/test.js",
+    "dist": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.personal.dailydesk",
+    "productName": "Daily Desk",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "renderer/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "portable"
+    },
+    "publish": null
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  }
+}
