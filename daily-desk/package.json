@@ -21,7 +21,8 @@
     ],
     "win": {
       "target": "portable"
-    }
+    },
+    "publish": null
   },
   "devDependencies": {
     "electron": "^33.0.0",
