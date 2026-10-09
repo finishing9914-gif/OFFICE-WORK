@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daily Desk</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Setup: first run -->
+<section id="setup" class="screen hidden">
+  <div class="center">
+    <h1>Daily Desk</h1>
+    <p class="muted">Create an app password. Your checklist and notes are encrypted with it.</p>
+    <input id="setup-pw" type="password" placeholder="New password (min 8 chars)" autocomplete="new-password">
+    <input id="setup-pw2" type="password" placeholder="Confirm password" autocomplete="new-password">
+    <button id="setup-btn" class="primary">Create</button>
+    <p class="warn">Important: if you forget this password, your data cannot be recovered.</p>
+    <p id="setup-err" class="err"></p>
+  </div>
+</section>
+
+<!-- Lock screen -->
+<section id="lock" class="screen hidden">
+  <div class="center">
+    <h1>Daily Desk</h1>
+    <p class="muted">Locked</p>
+    <input id="lock-pw" type="password" placeholder="Password" autocomplete="current-password">
+    <button id="lock-btn" class="primary">Unlock</button>
+    <p id="lock-err" class="err"></p>
+  </div>
+</section>
+
+<!-- Main app -->
+<section id="app" class="screen hidden">
+  <header class="top">
+    <nav class="tabs">
+      <button class="tab active" data-tab="today">Today</button>
+      <button class="tab" data-tab="notes">Notes</button>
+    </nav>
+    <div class="top-actions">
+      <button id="pin-btn" class="icon" title="Always on top">📌</button>
+      <button id="settings-btn" class="icon" title="Settings">⚙</button>
+      <button id="lock-now-btn" class="icon" title="Lock now">🔒</button>
+    </div>
+  </header>
+
+  <!-- Today / checklist -->
+  <div id="tab-today" class="tabpane">
+    <div class="datebar"><span id="today-label"></span><span id="sync-dot" class="dot" title="Cloud"></span></div>
+    <form id="add-task" class="addrow">
+      <input id="task-input" type="text" placeholder="Add a task for today…" autocomplete="off">
+      <button class="primary" type="submit">+</button>
+    </form>
+    <ul id="task-list" class="list"></ul>
+    <h3 id="carry-title" class="section hidden">Pending from earlier</h3>
+    <ul id="carry-list" class="list"></ul>
+    <p id="task-empty" class="muted center-text hidden">No tasks yet. Add one above.</p>
+    <p id="task-progress" class="muted small"></p>
+  </div>
+
+  <!-- Notes -->
+  <div id="tab-notes" class="tabpane hidden">
+    <div id="notes-list-view">
+      <div class="addrow">
+        <input id="note-search" type="text" placeholder="Search notes…" autocomplete="off">
+        <button id="new-note" class="primary" title="New note">+</button>
+      </div>
+      <ul id="note-list" class="list"></ul>
+      <p id="note-empty" class="muted center-text hidden">No notes yet.</p>
+    </div>
+    <div id="notes-edit-view" class="hidden">
+      <div class="addrow">
+        <button id="note-back" class="icon" title="Back">←</button>
+        <button id="note-delete" class="icon danger" title="Delete note">🗑</button>
+      </div>
+      <input id="note-title" type="text" placeholder="Title">
+      <textarea id="note-body" placeholder="Write here…"></textarea>
+      <p id="note-saved" class="muted small"></p>
+    </div>
+  </div>
+</section>
+
+<!-- Settings -->
+<div id="settings" class="modal hidden">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Settings</h2>
+      <button id="settings-close" class="icon">✕</button>
+    </div>
+
+    <label class="row"><span>Always on top</span><input id="set-pin" type="checkbox"></label>
+    <label class="row"><span>Auto-lock (minutes)</span><input id="set-lock" type="number" min="1" max="120" class="num"></label>
+
+    <h3>Cloud backup (Gmail / Google Drive)</h3>
+    <p class="muted small">Backup is encrypted with your app password. Google only stores a locked file.</p>
+    <p id="cloud-state" class="small"></p>
+    <div class="btnrow">
+      <button id="cloud-connect" class="primary">Connect Gmail</button>
+      <button id="cloud-sync">Sync now</button>
+      <button id="cloud-disconnect" class="danger">Disconnect</button>
+    </div>
+    <p id="cloud-err" class="err"></p>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

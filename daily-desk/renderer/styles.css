@@ -1,0 +1,62 @@
+:root { --bg:#fbfaf7; --panel:#ffffff; --ink:#222; --muted:#777; --line:#e6e3dc; --accent:#3b6ea8; --danger:#c0392b; --ok:#2e8b57; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#1f2126; --panel:#2a2d34; --ink:#eee; --muted:#9aa0a6; --line:#3a3e47; --accent:#6ea8e8; }
+}
+* { box-sizing: border-box; }
+html, body { margin:0; height:100%; background:var(--bg); color:var(--ink); font:14px/1.4 "Segoe UI", system-ui, sans-serif; }
+.hidden { display:none !important; }
+.screen { height:100%; display:flex; }
+.center { margin:auto; width:260px; display:flex; flex-direction:column; gap:10px; text-align:center; }
+.center-text { text-align:center; }
+h1 { margin:0; font-size:22px; }
+h2 { margin:0; font-size:16px; }
+h3 { font-size:13px; margin:14px 0 6px; }
+input, textarea, button { font:inherit; color:inherit; }
+input[type=text], input[type=password], input[type=number], textarea {
+  width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--panel);
+}
+textarea { min-height:300px; resize:vertical; }
+button { border:1px solid var(--line); background:var(--panel); border-radius:8px; padding:8px 12px; cursor:pointer; }
+button:hover { filter:brightness(0.97); }
+button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+button.danger { color:var(--danger); }
+button.icon { border:none; background:transparent; padding:4px 6px; font-size:15px; }
+.muted { color:var(--muted); margin:0; }
+.small { font-size:12px; }
+.warn { color:#b9770e; font-size:12px; margin:0; }
+.err { color:var(--danger); min-height:1em; margin:0; font-size:12px; }
+
+#app { flex-direction:column; padding:8px 10px; gap:6px; }
+#app > .top { }
+.top { display:flex; align-items:center; justify-content:space-between; }
+.tabs { display:flex; gap:4px; }
+.tab { border:none; background:transparent; padding:6px 8px; color:var(--muted); font-weight:600; }
+.tab.active { color:var(--accent); border-bottom:2px solid var(--accent); border-radius:0; }
+.top-actions { display:flex; gap:2px; }
+.tabpane { flex:1; overflow:auto; display:flex; flex-direction:column; gap:8px; }
+.datebar { display:flex; justify-content:space-between; align-items:center; font-weight:600; }
+.dot { width:9px; height:9px; border-radius:50%; background:var(--line); display:inline-block; }
+.dot.ok { background:var(--ok); } .dot.busy { background:#e0a100; } .dot.bad { background:var(--danger); }
+.addrow { display:flex; gap:6px; align-items:center; }
+.addrow input { flex:1; }
+.list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; }
+.list li { display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
+.list li.task span.txt { flex:1; word-break:break-word; cursor:text; }
+.list li.task.done span.txt { text-decoration:line-through; color:var(--muted); }
+.list li.task.carry { border-style:dashed; }
+.list li .x { border:none; background:transparent; color:var(--muted); padding:0 4px; }
+.list li .x:hover { color:var(--danger); }
+.list li.note { flex-direction:column; align-items:flex-start; cursor:pointer; }
+.list li.note b { font-size:14px; }
+.list li.note small { color:var(--muted); max-width:100%; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.section { color:var(--muted); }
+#notes-edit-view { display:flex; flex-direction:column; gap:8px; }
+#notes-edit-view .addrow { justify-content:space-between; }
+#note-title { font-weight:600; font-size:15px; }
+
+.modal { position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; padding:12px; }
+.panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; width:100%; display:flex; flex-direction:column; gap:8px; }
+.panel-head { display:flex; justify-content:space-between; align-items:center; }
+.row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; }
+.num { width:70px; }
+.btnrow { display:flex; flex-wrap:wrap; gap:6px; }
