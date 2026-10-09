@@ -123,6 +123,30 @@ function visibleTasks() {
   };
 }
 
+function startInlineEdit(span, item) {
+  // Electron does not support window.prompt(), so edit inline instead.
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = item.text;
+  input.className = 'inline-edit';
+  let finished = false;
+  const finish = (save) => {
+    if (finished) return;
+    finished = true;
+    const v = input.value.trim();
+    if (save && v && v !== item.text) updateItem(item.id, { text: v });
+    else renderTasks();
+  };
+  input.onkeydown = (e) => {
+    if (e.key === 'Enter') finish(true);
+    if (e.key === 'Escape') finish(false);
+  };
+  input.onblur = () => finish(true);
+  span.replaceWith(input);
+  input.focus();
+  input.select();
+}
+
 function taskRow(item, carry) {
   const li = document.createElement('li');
   li.className = 'task' + (item.done ? ' done' : '') + (carry ? ' carry' : '');
@@ -134,10 +158,7 @@ function taskRow(item, carry) {
   span.className = 'txt';
   span.textContent = item.text;
   span.title = 'Click to edit';
-  span.onclick = () => {
-    const v = prompt('Edit task', item.text);
-    if (v !== null && v.trim()) updateItem(item.id, { text: v.trim() });
-  };
+  span.onclick = () => startInlineEdit(span, item);
   const x = document.createElement('button');
   x.className = 'x';
   x.textContent = '✕';

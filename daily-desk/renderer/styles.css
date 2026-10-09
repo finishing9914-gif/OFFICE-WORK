@@ -60,3 +60,4 @@ button.icon { border:none; background:transparent; padding:4px 6px; font-size:15
 .row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; }
 .num { width:70px; }
 .btnrow { display:flex; flex-wrap:wrap; gap:6px; }
+.inline-edit { flex:1; padding:4px 6px; border:1px solid var(--accent); border-radius:6px; background:var(--panel); }
