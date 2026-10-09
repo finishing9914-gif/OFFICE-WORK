@@ -105,4 +105,40 @@ test('vault: cloud blob with other salt is decrypted by password', () => {
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+
+// ---- Today timer logic (extracted from renderer/app.js, no browser needed) ----
+{
+  const src = fs.readFileSync(path.join(__dirname, '..', 'renderer', 'app.js'), 'utf8');
+  const chunk = src.slice(src.indexOf('function windowOf'), src.indexOf('function notify'));
+  const pad = (n) => String(n).padStart(2, '0');
+  const fmtLeft = (ms) => { const t = Math.max(0, Math.floor(ms / 1000)); const h = Math.floor(t / 3600); const m = Math.floor((t % 3600) / 60); const s = t % 60; return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`; };
+  const { windowOf, timerOf } = new Function('pad', 'fmtLeft', chunk + '; return { windowOf, timerOf };')(pad, fmtLeft);
+  const item = { date: '2026-10-09', startTime: '08:20', duration: 10, done: false };
+  const at = (hh, mm, ss = 0) => new Date(2026, 9, 9, hh, mm, ss).getTime();
+
+  test('timer: waiting before start time', () => {
+    assert.strictEqual(timerOf(item, at(8, 19)).cls, 'waiting');
+  });
+  test('timer: running countdown 10 min from 08:20', () => {
+    const t = timerOf(item, at(8, 25, 30));
+    assert.strictEqual(t.cls, 'running');
+    assert.strictEqual(t.text, '04:30 baki');
+  });
+  test('timer: over after 08:30 shows overtime', () => {
+    const t = timerOf(item, at(8, 31, 15));
+    assert.strictEqual(t.cls, 'over');
+    assert.strictEqual(t.text, '+01:15 beshi');
+  });
+  test('timer: done task has no timer', () => {
+    assert.strictEqual(timerOf({ ...item, done: true }, at(8, 25)), null);
+  });
+  test('timer: task without duration just runs', () => {
+    assert.strictEqual(timerOf({ ...item, duration: null }, at(9, 0)).text, 'চলছে');
+  });
+  test('window: end = start + duration', () => {
+    const w = windowOf(item);
+    assert.strictEqual(w.end - w.start, 10 * 60000);
+  });
+}
+
 console.log(`\n${passed} tests passed` + (process.exitCode ? ' (with failures)' : ''));

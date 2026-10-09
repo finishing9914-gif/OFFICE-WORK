@@ -61,3 +61,20 @@ button.icon { border:none; background:transparent; padding:4px 6px; font-size:15
 .num { width:70px; }
 .btnrow { display:flex; flex-wrap:wrap; gap:6px; }
 .inline-edit { flex:1; padding:4px 6px; border:1px solid var(--accent); border-radius:6px; background:var(--panel); }
+
+/* ---- Today: add box, groups, timed tasks ---- */
+.addbox { display:flex; flex-direction:column; gap:6px; }
+.meta-row input[type=text] { flex:1.4; min-width:0; }
+.meta-row input[type=time] { flex:1; min-width:0; padding:7px 6px; border:1px solid var(--line); border-radius:8px; background:var(--panel); }
+.meta-row .num, .task-meta .num { width:64px; }
+.group-title { font-size:13px; margin:10px 0 2px; color:var(--accent); }
+.list li.task { flex-direction:column; align-items:stretch; gap:4px; }
+.task-top { display:flex; align-items:center; gap:8px; }
+.task-meta { display:flex; align-items:center; gap:6px; padding-left:24px; flex-wrap:wrap; }
+.task-meta input[type=time] { padding:3px 4px; border:1px solid var(--line); border-radius:6px; background:var(--panel); font-size:12px; }
+.task-meta input[type=number] { padding:3px 4px; border:1px solid var(--line); border-radius:6px; background:var(--panel); font-size:12px; }
+.timer { font-variant-numeric: tabular-nums; font-size:12px; font-weight:600; white-space:nowrap; color:var(--muted); }
+.timer.waiting { color:var(--muted); }
+.timer.running { color:var(--ok); }
+.timer.over { color:var(--danger); animation: blink 1s steps(2, start) infinite; }
+@keyframes blink { to { visibility:hidden; } }

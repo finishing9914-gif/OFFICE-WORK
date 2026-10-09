@@ -50,14 +50,22 @@
   <!-- Today / checklist -->
   <div id="tab-today" class="tabpane">
     <div class="datebar"><span id="today-label"></span><span id="sync-dot" class="dot" title="Cloud"></span></div>
-    <form id="add-task" class="addrow">
-      <input id="task-input" type="text" placeholder="Add a task / আজকের কাজ লিখুন…" autocomplete="off">
-      <button class="primary" type="submit" title="Add / যোগ করুন">+</button>
+    <form id="add-task" class="addbox">
+      <div class="addrow">
+        <input id="task-input" type="text" placeholder="কাজ লিখুন / Task…" autocomplete="off">
+        <button class="primary" type="submit" title="Add / যোগ করুন">+</button>
+      </div>
+      <div class="addrow meta-row">
+        <input id="task-list" type="text" list="list-options" placeholder="List" value="Office Work" autocomplete="off" title="List / তালিকা">
+        <datalist id="list-options"></datalist>
+        <input id="task-start" type="time" title="শুরুর সময় / Start time">
+        <input id="task-dur" type="number" min="1" max="600" class="num" placeholder="min" title="কত মিনিট লাগবে / Minutes">
+      </div>
     </form>
-    <ul id="task-list" class="list"></ul>
-    <h3 id="carry-title" class="section hidden">Pending from earlier / আগের বাকি কাজ</h3>
+    <div id="today-groups"></div>
+    <h3 id="carry-title" class="section hidden">আগের বাকি কাজ / Pending from earlier</h3>
     <ul id="carry-list" class="list"></ul>
-    <p id="task-empty" class="muted center-text hidden">No tasks yet. Add one above. / কোনো কাজ নেই।</p>
+    <p id="task-empty" class="muted center-text hidden">কোনো কাজ নেই। উপরে যোগ করুন।</p>
     <p id="task-progress" class="muted small"></p>
   </div>
 

@@ -2,9 +2,25 @@
 // Daily Desk UI. No data is stored here; everything goes through window.desk (main process).
 const $ = (id) => document.getElementById(id);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const DEFAULT_LIST = 'Office Work';
+const NO_LIST = 'General';
+const NOTIFY_WINDOW_MS = 10 * 60 * 1000; // don't announce events older than 10 min (e.g. app opened late)
+
+const pad = (n) => String(n).padStart(2, '0');
 const today = () => {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+const hm = (ms) => {
+  const d = new Date(ms);
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+const fmtLeft = (ms) => {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
 };
 
 let state = null;        // { checklist: [], notes: [] } while unlocked
@@ -12,6 +28,9 @@ let status = null;
 let openNoteId = null;
 let saveTimer = null;
 let idleTimer = null;
+let tickTimer = null;
+let renderedDay = today();
+const announced = new Set(); // in-memory only: "<id>:start" / "<id>:end"
 
 // ---------- screens ----------
 function show(name) {
@@ -28,6 +47,7 @@ async function boot() {
 function showLock() {
   state = null;
   openNoteId = null;
+  stopTicker();
   $('lock-pw').value = '';
   $('lock-err').textContent = '';
   $('settings').classList.add('hidden');
@@ -42,6 +62,7 @@ async function enterApp(res) {
   renderTasks();
   renderNotes();
   startIdleWatch();
+  startTicker();
 }
 
 function normalize(d) {
@@ -67,7 +88,7 @@ async function unlock() {
   $('lock-err').textContent = '';
   const res = await window.desk.unlock($('lock-pw').value);
   $('lock-pw').value = '';
-  if (!res.ok) return ($('lock-err').textContent = 'Wrong password.');
+  if (!res.ok) return ($('lock-err').textContent = 'Wrong password. / ভুল পাসওয়ার্ড।');
   await enterApp(res);
 }
 $('lock-btn').onclick = unlock;
@@ -75,6 +96,7 @@ $('lock-pw').addEventListener('keydown', (e) => e.key === 'Enter' && unlock());
 $('setup-pw2').addEventListener('keydown', (e) => e.key === 'Enter' && $('setup-btn').click());
 
 async function lockNow() {
+  if (!state) return;
   await flushSave();
   await window.desk.lock();
   showLock();
@@ -89,7 +111,11 @@ function startIdleWatch() {
     const mins = status ? status.autoLockMinutes : 10;
     idleTimer = setTimeout(lockNow, mins * 60 * 1000);
   };
-  ['mousemove', 'keydown', 'mousedown', 'wheel'].forEach((ev) => document.addEventListener(ev, reset, { passive: true }));
+  if (!startIdleWatch.bound) {
+    ['mousemove', 'keydown', 'mousedown', 'wheel'].forEach((ev) => document.addEventListener(ev, reset, { passive: true }));
+    startIdleWatch.bound = true;
+  }
+  startIdleWatch.reset = reset;
   reset();
 }
 
@@ -113,18 +139,141 @@ window.desk.onDataUpdated((d) => {
   renderNotes(keepNote);
 });
 
-// ---------- checklist ----------
-function visibleTasks() {
-  const t = today();
-  const live = state.checklist.filter((x) => !x.deleted);
-  return {
-    todays: live.filter((x) => x.date === t),
-    carry: live.filter((x) => x.date < t && !x.done),
-  };
+// ---------- timing ----------
+// A task with a start time (and minutes) gets a live countdown on the day it was added.
+function windowOf(item) {
+  if (!item.startTime || !item.date) return null;
+  const [y, mo, da] = item.date.split('-').map(Number);
+  const [h, m] = item.startTime.split(':').map(Number);
+  const start = new Date(y, mo - 1, da, h, m, 0, 0).getTime();
+  const dur = Number(item.duration) > 0 ? Number(item.duration) : 0;
+  return { start, end: dur ? start + dur * 60000 : null };
 }
 
+function timerOf(item, now) {
+  const w = windowOf(item);
+  if (!w || item.done) return null;
+  if (now < w.start) return { cls: 'waiting', text: `শুরু ${item.startTime}` };
+  if (!w.end) return { cls: 'running', text: 'চলছে' };
+  if (now < w.end) return { cls: 'running', text: `${fmtLeft(w.end - now)} baki` };
+  return { cls: 'over', text: `+${fmtLeft(now - w.end)} beshi` };
+}
+
+function notify(title, body) {
+  try {
+    if ('Notification' in window) new Notification(title, { body, silent: false });
+  } catch { /* notifications unavailable: ignore */ }
+}
+
+function checkNotifications(now) {
+  if (!state) return;
+  for (const it of state.checklist) {
+    if (it.deleted || it.done || it.date !== today()) continue;
+    const w = windowOf(it);
+    if (!w) continue;
+    if (!announced.has(it.id + ':start') && now >= w.start && now - w.start < NOTIFY_WINDOW_MS) {
+      announced.add(it.id + ':start');
+      notify(`▶ ${it.text}`, `কাজ শুরুর সময় হয়েছে (${it.startTime})`);
+    }
+    if (w.end && !announced.has(it.id + ':end') && now >= w.end && now - w.end < NOTIFY_WINDOW_MS) {
+      announced.add(it.id + ':end');
+      notify(`⏰ ${it.text}`, `${it.duration} মিনিট শেষ! কাজ শেষ হলে tick দিন।`);
+    }
+  }
+}
+
+function tick() {
+  if (!state) return;
+  if (today() !== renderedDay) { renderedDay = today(); renderTasks(); }
+  const now = Date.now();
+  checkNotifications(now);
+  for (const el of document.querySelectorAll('[data-timer]')) {
+    const it = state.checklist.find((x) => x.id === el.dataset.timer);
+    const info = it && timerOf(it, now);
+    if (!info) { el.textContent = ''; el.className = 'timer'; continue; }
+    el.textContent = info.text;
+    el.className = `timer ${info.cls}`;
+  }
+}
+
+function startTicker() {
+  stopTicker();
+  tick();
+  tickTimer = setInterval(tick, 1000);
+}
+function stopTicker() {
+  clearInterval(tickTimer);
+  tickTimer = null;
+}
+
+// ---------- checklist ----------
+function byTime(a, b) {
+  return (a.startTime || '99:99').localeCompare(b.startTime || '99:99');
+}
+
+function taskRow(item, carry) {
+  const li = document.createElement('li');
+  li.className = 'task' + (item.done ? ' done' : '') + (carry ? ' carry' : '');
+
+  const top = document.createElement('div');
+  top.className = 'task-top';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.checked = !!item.done;
+  cb.onchange = () => updateItem(item.id, { done: cb.checked });
+  const span = document.createElement('span');
+  span.className = 'txt';
+  span.textContent = item.text;
+  span.title = 'Click to edit';
+  span.onclick = () => startInlineEdit(span, item);
+  const timer = document.createElement('span');
+  timer.className = 'timer';
+  timer.dataset.timer = item.id;
+  const x = document.createElement('button');
+  x.className = 'x';
+  x.textContent = '✕';
+  x.title = 'Delete';
+  x.onclick = () => removeItem(item.id);
+  top.append(cb, span, timer, x);
+  li.append(top);
+
+  const meta = document.createElement('div');
+  meta.className = 'task-meta';
+  if (carry) {
+    const d = document.createElement('small');
+    d.className = 'muted';
+    d.textContent = `${item.date} · ${item.list || NO_LIST}`;
+    meta.append(d);
+  } else {
+    const start = document.createElement('input');
+    start.type = 'time';
+    start.value = item.startTime || '';
+    start.title = 'শুরুর সময় / Start time';
+    start.onchange = () => updateItem(item.id, { startTime: start.value });
+    const dur = document.createElement('input');
+    dur.type = 'number';
+    dur.min = '1';
+    dur.max = '600';
+    dur.className = 'num';
+    dur.placeholder = 'min';
+    dur.value = item.duration || '';
+    dur.title = 'কত মিনিট / Minutes';
+    dur.onchange = () => {
+      const v = parseInt(dur.value, 10);
+      updateItem(item.id, { duration: v > 0 ? v : null });
+    };
+    const label = document.createElement('small');
+    label.className = 'muted';
+    const w = windowOf(item);
+    label.textContent = w && w.end ? `শেষ ${hm(w.end)}` : '';
+    meta.append(start, dur, label);
+  }
+  li.append(meta);
+  return li;
+}
+
+// Electron does not support window.prompt(), so edit the text inline instead.
 function startInlineEdit(span, item) {
-  // Electron does not support window.prompt(), so edit inline instead.
   const input = document.createElement('input');
   input.type = 'text';
   input.value = item.text;
@@ -147,41 +296,61 @@ function startInlineEdit(span, item) {
   input.select();
 }
 
-function taskRow(item, carry) {
-  const li = document.createElement('li');
-  li.className = 'task' + (item.done ? ' done' : '') + (carry ? ' carry' : '');
-  const cb = document.createElement('input');
-  cb.type = 'checkbox';
-  cb.checked = !!item.done;
-  cb.onchange = () => updateItem(item.id, { done: cb.checked });
-  const span = document.createElement('span');
-  span.className = 'txt';
-  span.textContent = item.text;
-  span.title = 'Click to edit';
-  span.onclick = () => startInlineEdit(span, item);
-  const x = document.createElement('button');
-  x.className = 'x';
-  x.textContent = '✕';
-  x.title = 'Delete';
-  x.onclick = () => removeItem(item.id);
-  li.append(cb, span, x);
-  return li;
-}
-
 function renderTasks() {
-  const { todays, carry } = visibleTasks();
-  $('task-list').replaceChildren(...todays.map((t) => taskRow(t, false)));
-  $('carry-list').replaceChildren(...carry.map((t) => taskRow(t, true)));
+  if (!state) return;
+  const t = today();
+  renderedDay = t;
+  const live = state.checklist.filter((x) => !x.deleted);
+  const todays = live.filter((x) => x.date === t);
+  const carry = live.filter((x) => x.date < t && !x.done);
+
+  // Group today's tasks by list (e.g. "Office Work").
+  const groups = new Map();
+  for (const it of todays) {
+    const key = it.list || NO_LIST;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(it);
+  }
+  const container = $('today-groups');
+  container.replaceChildren();
+  const names = [...groups.keys()].sort((a, b) => (a === DEFAULT_LIST ? -1 : b === DEFAULT_LIST ? 1 : a.localeCompare(b)));
+  for (const name of names) {
+    const items = groups.get(name).sort(byTime);
+    const h = document.createElement('h3');
+    h.className = 'group-title';
+    const done = items.filter((i) => i.done).length;
+    h.textContent = `${name}  (${done}/${items.length})`;
+    const ul = document.createElement('ul');
+    ul.className = 'list';
+    items.forEach((it) => ul.append(taskRow(it, false)));
+    container.append(h, ul);
+  }
+
+  $('carry-list').replaceChildren(...carry.map((it) => taskRow(it, true)));
   $('carry-title').classList.toggle('hidden', carry.length === 0);
   $('task-empty').classList.toggle('hidden', todays.length + carry.length > 0);
-  const done = todays.filter((t) => t.done).length;
-  $('task-progress').textContent = todays.length ? `${done} / ${todays.length} done today` : '';
+  const doneToday = todays.filter((x) => x.done).length;
+  $('task-progress').textContent = todays.length ? `${doneToday} / ${todays.length} done today` : '';
+
+  // Suggest existing list names.
+  const listNames = new Set([DEFAULT_LIST, ...live.map((x) => x.list).filter(Boolean)]);
+  $('list-options').replaceChildren(...[...listNames].map((n) => {
+    const o = document.createElement('option');
+    o.value = n;
+    return o;
+  }));
+  tick();
 }
 
 function updateItem(id, patch) {
   const it = state.checklist.find((x) => x.id === id);
   if (!it) return;
   Object.assign(it, patch, { updatedAt: Date.now() });
+  // Changing the time means a fresh reminder is allowed.
+  if ('startTime' in patch || 'duration' in patch) {
+    announced.delete(id + ':start');
+    announced.delete(id + ':end');
+  }
   renderTasks();
   scheduleSave();
 }
@@ -199,8 +368,22 @@ $('add-task').onsubmit = (e) => {
   e.preventDefault();
   const text = $('task-input').value.trim();
   if (!text) return;
-  state.checklist.push({ id: uid(), text, done: false, date: today(), updatedAt: Date.now() });
+  const list = $('task-list').value.trim() || DEFAULT_LIST;
+  const startTime = $('task-start').value || '';
+  const dur = parseInt($('task-dur').value, 10);
+  state.checklist.push({
+    id: uid(),
+    text,
+    done: false,
+    date: today(),
+    list,
+    startTime,
+    duration: dur > 0 ? dur : null,
+    updatedAt: Date.now(),
+  });
   $('task-input').value = '';
+  $('task-start').value = '';
+  $('task-dur').value = '';
   renderTasks();
   scheduleSave();
 };
@@ -328,7 +511,7 @@ $('set-lock').onchange = async (e) => {
   e.target.value = n;
   status.autoLockMinutes = n;
   await window.desk.setSettings({ autoLockMinutes: n });
-  startIdleWatch();
+  if (startIdleWatch.reset) startIdleWatch.reset();
 };
 
 $('cloud-connect').onclick = async () => {
@@ -344,7 +527,6 @@ $('cloud-connect').onclick = async () => {
   $('cloud-err').textContent = '';
   status = await window.desk.status();
   renderCloud();
-  state = normalize(state);
   renderTasks();
   renderNotes();
 };
@@ -367,7 +549,7 @@ $('cloud-disconnect').onclick = async () => {
 
 function errorText(reason) {
   const map = {
-    NO_GOOGLE_CLIENT_ID: 'Google Client ID missing. See README (config.json).',
+    NO_GOOGLE_CLIENT_ID: 'Google Client ID missing. See GOOGLE_SETUP_BN.md (config.json).',
     CLOUD_PASSWORD_MISMATCH: 'Cloud backup ar password diye banano. Ager password diye unlock korun.',
     SIGNIN_TIMEOUT: 'Login timed out. Please try again.',
     OS_ENCRYPTION_UNAVAILABLE: 'This PC has no secure storage available for the login token.',
